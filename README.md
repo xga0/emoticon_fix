@@ -7,6 +7,11 @@ An emoticon short for "emotion icon", also known simply as an emote, is a pictor
 ## Why do we need to transform emoticon to text?
 When we preprocess the text for the NLP model, if we just remove all the punctuations in the text, emoticons will leave some meaningless letters. For example, ":D" (laugh) will become just "D". Obviously, these meaningless letters will affect the performance of the NLP model.
 
+## Installation
+```
+pip install emoticon-fix
+```
+
 ## Example
 ```python
 from emoticon_fix import emoticon_fix
