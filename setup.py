@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="emoticon_fix",
-    version="0.0.3",
+    version="0.0.4",
     author="Sean Gao",
     author_email="seangaoxy@gmail.com",
     description="Transform emoticon to text, e.g., :) => Smile.",
