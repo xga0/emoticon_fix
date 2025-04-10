@@ -340,16 +340,10 @@ def emoticon_fix(input_string: str) -> str:
     tokens = tknzr.tokenize(input_string)
     
     result = []
-    for i, token in enumerate(tokens):
+    for token in tokens:
         if token in EMOTICON_DICT:
-            # Add space before if not first token and previous token isn't punctuation
-            if i > 0 and not tokens[i-1].strip() and tokens[i-1] not in '.,!?;:':
-                result.append(' ')
             result.append(EMOTICON_DICT[token])
-            # Add space after if not last token and next token isn't punctuation
-            if i < len(tokens) - 1 and not tokens[i+1].strip() and tokens[i+1] not in '.,!?;:':
-                result.append(' ')
         else:
             result.append(token)
             
-    return ''.join(result)
+    return ' '.join(result)

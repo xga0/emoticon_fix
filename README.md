@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A Python package to transform emoticons in text to their corresponding meanings, e.g., `:)` => `Smile`. This is particularly useful for NLP preprocessing where emoticons need to be preserved as meaningful text.
+A lightweight and efficient library for transforming emoticons into their semantic meanings. This is particularly useful for NLP preprocessing where emoticons need to be preserved as meaningful text.
 
 ## Table of Contents
 

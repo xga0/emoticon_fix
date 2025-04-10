@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="emoticon_fix",
-    version="0.1.0",
+    version="0.1.1",
     author="Sean Gao",
     author_email="seangaoxy@gmail.com",
-    description="Transform emoticon to text, e.g., :) => Smile.",
+    description="A lightweight and efficient library for transforming emoticons into their semantic meanings",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/xga0/emoticon_fix",
