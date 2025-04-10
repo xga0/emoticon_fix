@@ -341,14 +341,20 @@ def emoticon_fix(input_string: str) -> str:
     
     result = []
     for i, token in enumerate(tokens):
+        # Handle spaces before current token
+        if i > 0:
+            prev_token = tokens[i-1]
+            
+            # Add space after punctuation (except closing punctuation)
+            if prev_token in '.,!?;:' and token not in '.,!?;:':
+                result.append(' ')
+            # Add space between words/emoticons
+            elif not prev_token.strip() or (prev_token not in '.,!?;:' and token not in '.,!?;:'):
+                result.append(' ')
+            
+        # Add the token (either emoticon meaning or original token)
         if token in EMOTICON_DICT:
-            # Add space before if not first token and previous token isn't punctuation
-            if i > 0 and not tokens[i-1].strip() and tokens[i-1] not in '.,!?;:':
-                result.append(' ')
             result.append(EMOTICON_DICT[token])
-            # Add space after if not last token and next token isn't punctuation
-            if i < len(tokens) - 1 and not tokens[i+1].strip() and tokens[i+1] not in '.,!?;:':
-                result.append(' ')
         else:
             result.append(token)
             
