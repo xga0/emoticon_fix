@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="emoticon_fix",
-    version="0.0.4",
+    version="0.1.0",
     author="Sean Gao",
     author_email="seangaoxy@gmail.com",
     description="Transform emoticon to text, e.g., :) => Smile.",
@@ -29,9 +29,7 @@ setuptools.setup(
         "Natural Language :: English",
     ],
     python_requires='>=3.6',
-    install_requires=[
-        'nltk>=3.5',
-    ],
+    install_requires=[],
     extras_require={
         'dev': [
             'pytest>=6.0',

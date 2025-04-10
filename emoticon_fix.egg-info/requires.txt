@@ -1,0 +1,8 @@
+nltk>=3.5
+
+[dev]
+pytest>=6.0
+pytest-cov>=2.0
+black>=21.0
+mypy>=0.800
+flake8>=3.9
