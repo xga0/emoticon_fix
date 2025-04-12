@@ -1,15 +1,15 @@
 # emoticon_fix
 
-[![PyPI version](https://badge.fury.io/py/emoticon-fix.svg?t=20250410)](https://badge.fury.io/py/emoticon-fix)
+[![PyPI version](https://img.shields.io/pypi/v/emoticon-fix.svg)](https://pypi.org/project/emoticon-fix/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/emoticon-fix.svg)](https://pypi.org/project/emoticon-fix/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A lightweight and efficient library for transforming emoticons into their semantic meanings. This is particularly useful for NLP preprocessing where emoticons need to be preserved as meaningful text.
 
 ## Table of Contents
 
 - [What are emoticons?](#what-are-emoticons)
+- [What are kaomoji?](#what-are-kaomoji)
 - [Why transform emoticons to text?](#why-transform-emoticons-to-text)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -22,9 +22,15 @@ A lightweight and efficient library for transforming emoticons into their semant
 
 An emoticon (short for "emotion icon") is a pictorial representation of a facial expression using characters—usually punctuation marks, numbers, and letters—to express a person's feelings or mood. The first ASCII emoticons, `:-)` and `:-(`, were written by Scott Fahlman in 1982, but emoticons actually originated on the PLATO IV computer system in 1972.
 
+## What are kaomoji?
+
+Kaomoji (顔文字) are Japanese emoticons that are read horizontally and are more elaborate than traditional Western emoticons. They often use Unicode characters to create more complex expressions and can represent a wider range of emotions and actions. For example, `(｡♥‿♥｡)` represents being in love, and `(ノ°益°)ノ` shows rage. Unlike Western emoticons that you read by tilting your head sideways, kaomoji are meant to be viewed straight on.
+
+emoticon_fix supports a wide variety of kaomoji, making it particularly useful for processing text from Asian social media or any platform where kaomoji are commonly used.
+
 ## Why transform emoticons to text?
 
-When preprocessing text for NLP models, simply removing punctuation can leave emoticons as meaningless characters. For example, `":D"` (laugh) would become just `"D"`. This can negatively impact model performance. By transforming emoticons to their textual meanings, we preserve the emotional context in a format that's more meaningful for NLP tasks.
+When preprocessing text for NLP models, simply removing punctuation can leave emoticons and kaomoji as meaningless characters. For example, `:D` (laugh) would become just `D`, and `(｡♥‿♥｡)` (in love) would be completely lost. This can negatively impact model performance. By transforming emoticons and kaomoji to their textual meanings, we preserve the emotional context in a format that's more meaningful for NLP tasks.
 
 ## Installation
 
@@ -59,13 +65,22 @@ result = emoticon_fix(text)
 print(result)  # Output: 'test Smile test Laugh test'
 ```
 
-### Complex Example
+### Complex Example with Kaomoji
 ```python
 from emoticon_fix import emoticon_fix
 
-text = 'Feeling :-) today! But yesterday was :-( and tomorrow might be :-D'
+text = 'Feeling (｡♥‿♥｡) today! When things go wrong ┗(＾0＾)┓ keep dancing!'
 result = emoticon_fix(text)
-print(result)  # Output: 'Feeling Smile today! But yesterday was Sad and tomorrow might be Laugh'
+print(result)  # Output: 'Feeling In Love today! When things go wrong Dancing Joy keep dancing!'
+```
+
+### Mixed Emoticons Example
+```python
+from emoticon_fix import emoticon_fix
+
+text = 'Western :) meets Eastern (◕‿◕✿) style!'
+result = emoticon_fix(text)
+print(result)  # Output: 'Western Smile meets Eastern Sweet Smile style!'
 ```
 
 ## Contributing
@@ -90,7 +105,3 @@ pytest
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## PyPI Link
-
-https://pypi.org/project/emoticon-fix/
