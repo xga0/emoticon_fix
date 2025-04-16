@@ -472,26 +472,29 @@ def remove_emoticons(input_string: str) -> str:
     tokens = tknzr.tokenize(input_string)
     
     result = []
+    last_added_idx = -1  # Track the index of the last token we added
+    
     for i, token in enumerate(tokens):
         # Skip emoticons
         if token in EMOTICON_DICT:
             continue
             
-        # Handle spaces before current token
-        if i > 0 and result:  # Only if we've added something previously
-            prev_token = tokens[i-1]
-            prev_added = prev_token not in EMOTICON_DICT  # Was the previous token added?
-            
-            if prev_added:
+        # Handle spacing
+        if result:  # If we've already added something
+            # Check if we need to add space
+            if last_added_idx >= 0:  # If we have added a token before
+                last_token = tokens[last_added_idx]
+                
                 # Add space after punctuation (except closing punctuation)
-                if prev_token in '.,!?;:' and token not in '.,!?;:':
+                if last_token in '.,!?;:' and token not in '.,!?;:':
                     result.append(' ')
                 # Add space between words
-                elif not prev_token.strip() or (prev_token not in '.,!?;:' and token not in '.,!?;:'):
+                elif not last_token.strip() or (last_token not in '.,!?;:' and token not in '.,!?;:'):
                     result.append(' ')
-            
+        
         # Add the non-emoticon token
         result.append(token)
+        last_added_idx = i  # Update last added token index
             
     return ''.join(result)
 
