@@ -6,7 +6,7 @@ This is useful for NLP preprocessing where emoticons need to be preserved as mea
 """
 
 import re
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 # Dictionary mapping emoticons to their meanings
 EMOTICON_DICT: Dict[str, str] = {
@@ -446,6 +446,101 @@ def emoticon_fix(input_string: str) -> str:
         # Add the token (either emoticon meaning or original token)
         if token in EMOTICON_DICT:
             result.append(EMOTICON_DICT[token])
+        else:
+            result.append(token)
+            
+    return ''.join(result)
+
+def remove_emoticons(input_string: str) -> str:
+    """
+    Remove all emoticons from the input string.
+    
+    Args:
+        input_string (str): The input string containing emoticons
+        
+    Returns:
+        str: The string with all emoticons removed
+        
+    Example:
+        >>> remove_emoticons('Hello :) World :D')
+        'Hello World'
+    """
+    if not isinstance(input_string, str):
+        raise TypeError("Input must be a string")
+        
+    tknzr = CustomTokenizer()
+    tokens = tknzr.tokenize(input_string)
+    
+    result = []
+    for i, token in enumerate(tokens):
+        # Skip emoticons
+        if token in EMOTICON_DICT:
+            continue
+            
+        # Handle spaces before current token
+        if i > 0 and result:  # Only if we've added something previously
+            prev_token = tokens[i-1]
+            prev_added = prev_token not in EMOTICON_DICT  # Was the previous token added?
+            
+            if prev_added:
+                # Add space after punctuation (except closing punctuation)
+                if prev_token in '.,!?;:' and token not in '.,!?;:':
+                    result.append(' ')
+                # Add space between words
+                elif not prev_token.strip() or (prev_token not in '.,!?;:' and token not in '.,!?;:'):
+                    result.append(' ')
+            
+        # Add the non-emoticon token
+        result.append(token)
+            
+    return ''.join(result)
+
+def replace_emoticons(input_string: str, tag_format: str = "__EMO_{tag}__") -> str:
+    """
+    Replace emoticons with customizable NER-friendly tags.
+    
+    Args:
+        input_string (str): The input string containing emoticons
+        tag_format (str): Format string for the replacement tag. 
+                         Use {tag} as a placeholder for the emoticon meaning.
+        
+    Returns:
+        str: The string with emoticons replaced by formatted tags
+        
+    Example:
+        >>> replace_emoticons('Hello :) World :D', tag_format="__EMO_{tag}__")
+        'Hello __EMO_Smile__ World __EMO_Laugh__'
+        
+        >>> replace_emoticons('Hello :) World :D', tag_format="<EMO:{tag}>")
+        'Hello <EMO:Smile> World <EMO:Laugh>'
+    """
+    if not isinstance(input_string, str):
+        raise TypeError("Input must be a string")
+        
+    if "{tag}" not in tag_format:
+        raise ValueError("tag_format must contain the {tag} placeholder")
+        
+    tknzr = CustomTokenizer()
+    tokens = tknzr.tokenize(input_string)
+    
+    result = []
+    for i, token in enumerate(tokens):
+        # Handle spaces before current token
+        if i > 0:
+            prev_token = tokens[i-1]
+            
+            # Add space after punctuation (except closing punctuation)
+            if prev_token in '.,!?;:' and token not in '.,!?;:':
+                result.append(' ')
+            # Add space between words/emoticons
+            elif not prev_token.strip() or (prev_token not in '.,!?;:' and token not in '.,!?;:'):
+                result.append(' ')
+            
+        # Add the token (either formatted emoticon tag or original token)
+        if token in EMOTICON_DICT:
+            meaning = EMOTICON_DICT[token]
+            formatted_tag = tag_format.format(tag=meaning)
+            result.append(formatted_tag)
         else:
             result.append(token)
             

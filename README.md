@@ -41,12 +41,20 @@ pip install emoticon-fix
 ## Usage
 
 ```python
-from emoticon_fix import emoticon_fix
+from emoticon_fix import emoticon_fix, remove_emoticons, replace_emoticons
 
-# Basic usage
+# Basic usage - transform emoticons to their meanings
 text = 'Hello :) World :D'
 result = emoticon_fix(text)
 print(result)  # Output: 'Hello Smile World Laugh'
+
+# Remove emoticons completely
+stripped_text = remove_emoticons(text)
+print(stripped_text)  # Output: 'Hello World'
+
+# Replace with NER-friendly tags (customizable format)
+ner_text = replace_emoticons(text, tag_format="__EMO_{tag}__")
+print(ner_text)  # Output: 'Hello __EMO_Smile__ World __EMO_Laugh__'
 
 # Works with multiple emoticons
 text = 'I am :-) but sometimes :-( and occasionally :-D'
@@ -81,6 +89,30 @@ from emoticon_fix import emoticon_fix
 text = 'Western :) meets Eastern (◕‿◕✿) style!'
 result = emoticon_fix(text)
 print(result)  # Output: 'Western Smile meets Eastern Sweet Smile style!'
+```
+
+### Removing Emoticons Example
+```python
+from emoticon_fix import remove_emoticons
+
+text = 'This message :D contains some (｡♥‿♥｡) emoticons that need to be removed!'
+result = remove_emoticons(text)
+print(result)  # Output: 'This message contains some emoticons that need to be removed!'
+```
+
+### NER-Friendly Tagging Example
+```python
+from emoticon_fix import replace_emoticons
+
+# Default format: __EMO_{tag}__
+text = 'Happy customers :) are returning customers!'
+result = replace_emoticons(text)
+print(result)  # Output: 'Happy customers __EMO_Smile__ are returning customers!'
+
+# Custom format
+text = 'User feedback: Product was great :D but shipping was slow :('
+result = replace_emoticons(text, tag_format="<EMOTION type='{tag}'>")
+print(result)  # Output: 'User feedback: Product was great <EMOTION type='Laugh'> but shipping was slow <EMOTION type='Sad'>'
 ```
 
 ## Contributing
