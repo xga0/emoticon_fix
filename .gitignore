@@ -43,4 +43,4 @@ htmlcov/
 
 # Local development
 .DS_Store
-.env 
+.env test.py
