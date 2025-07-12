@@ -1,44 +1,47 @@
+#!/usr/bin/env python3
+"""
+Basic test cases for the emoticon_fix core functionality.
+"""
+
 from emoticon_fix import emoticon_fix
 
-# Test cases
-test_cases = [
-    # Basic cases
-    ("Hello :) World", "Hello Smile World"),
-    ("Hello:) World", "Hello Smile World"),
-    ("Hello :)! World", "Hello Smile! World"),
+def run_basic_tests():
+    """Run basic test cases for emoticon_fix functionality."""
+    test_cases = [
+        ("Hello :) World", "Hello Smile World"),
+        ("Hello:) World", "Hello Smile World"),
+        ("Hello :)! World", "Hello Smile! World"),
+        ("Hello :) :D World", "Hello Smile Laugh World"),
+        ("Hello, :) World!", "Hello, Smile World!"),
+        ("Hello:)! Nice:D.", "Hello Smile! Nice Laugh."),
+        ("Hello:)!:D", "Hello Smile! Laugh"),
+        (":) Hello", "Smile Hello"),
+        ("Hello :)", "Hello Smile"),
+        ("Hello:):)", "Hello Smile Smile"),
+        ("Hello:)World:D!", "Hello Smile World Laugh!"),
+        ("Hi!:)Bye", "Hi! Smile Bye"),
+        ("Test,:),test", "Test, Smile, test")
+    ]
     
-    # Multiple emoticons
-    ("Hello :) :D World", "Hello Smile Laugh World"),
+    print("Running basic emoticon_fix tests...")
+    passed = 0
+    total = len(test_cases)
     
-    # Punctuation cases
-    ("Hello, :) World!", "Hello, Smile World!"),
-    ("Hello:)! Nice:D.", "Hello Smile! Nice Laugh."),
-    ("Hello:)!:D", "Hello Smile! Laugh"),
+    for i, (input_text, expected) in enumerate(test_cases, 1):
+        result = emoticon_fix(input_text)
+        success = result == expected
+        
+        if success:
+            passed += 1
+            print(f"Test {i}: ✓ PASS")
+        else:
+            print(f"Test {i}: ✗ FAIL")
+            print(f"  Input:    '{input_text}'")
+            print(f"  Expected: '{expected}'")
+            print(f"  Got:      '{result}'")
     
-    # Edge cases
-    (":) Hello", "Smile Hello"),
-    ("Hello :)", "Hello Smile"),
-    ("Hello:):)", "Hello Smile Smile"),
-    
-    # Mixed cases
-    ("Hello:)World:D!", "Hello Smile World Laugh!"),
-    ("Hi!:)Bye", "Hi! Smile Bye"),
-    ("Test,:),test", "Test, Smile, test")
-]
+    print(f"\nBasic Tests: {passed}/{total} passed")
+    return passed == total
 
-# Run tests
-for i, (input_text, expected) in enumerate(test_cases, 1):
-    result = emoticon_fix(input_text)
-    success = result == expected
-    print(f"\nTest {i}:")
-    print(f"Input:    '{input_text}'")
-    print(f"Expected: '{expected}'")
-    print(f"Got:      '{result}'")
-    print(f"Status:   {'✓ PASS' if success else '✗ FAIL'}")
-    
-    if not success:
-        print("Difference analysis:")
-        print(f"Expected length: {len(expected)}, Got length: {len(result)}")
-        for j, (e, g) in enumerate(zip(expected, result)):
-            if e != g:
-                print(f"Mismatch at position {j}: Expected '{e}', Got '{g}'") 
+if __name__ == "__main__":
+    run_basic_tests() 

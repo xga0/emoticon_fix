@@ -13,6 +13,7 @@ A lightweight and efficient library for transforming emoticons into their semant
 - [Why transform emoticons to text?](#why-transform-emoticons-to-text)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Sentiment Analysis](#sentiment-analysis)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Testing](#testing)
@@ -61,6 +62,66 @@ text = 'I am :-) but sometimes :-( and occasionally :-D'
 result = emoticon_fix(text)
 print(result)  # Output: 'I am Smile but sometimes Sad and occasionally Laugh'
 ```
+
+### New: Sentiment Analysis
+
+```python
+from emoticon_fix import analyze_sentiment, get_sentiment_score, classify_sentiment
+
+# Analyze sentiment of emoticons in text
+text = "Having a great day :) :D!"
+analysis = analyze_sentiment(text)
+print(f"Sentiment: {analysis.classification}")  # "Very Positive"
+print(f"Score: {analysis.average_score:.3f}")   # "0.800"
+
+# Get just the sentiment score (-1.0 to 1.0)
+score = get_sentiment_score("Happy :) but sad :(")
+print(score)  # 0.05 (slightly positive)
+
+# Get sentiment classification
+classification = classify_sentiment("Love this (｡♥‿♥｡) so much!")
+print(classification)  # "Very Positive"
+```
+
+## Sentiment Analysis
+
+The sentiment analysis extension provides powerful emotion detection capabilities:
+
+### Features
+
+- **Sentiment Scoring**: Get numerical sentiment scores (-1.0 to 1.0)
+- **Classification**: Automatic categorization (Very Positive, Positive, Neutral, Negative, Very Negative)
+- **Emotion Extraction**: Extract individual emoticons with their emotions and scores
+- **Batch Processing**: Analyze multiple texts efficiently
+- **Detailed Analysis**: Get comprehensive sentiment reports
+
+### Advanced Usage
+
+```python
+from emoticon_fix import analyze_sentiment, extract_emotions, batch_analyze
+
+# Detailed sentiment analysis
+text = "Mixed feelings :) but also :( about this"
+analysis = analyze_sentiment(text)
+print(analysis.summary())
+
+# Extract individual emotions
+emotions = extract_emotions("Happy :) but worried :(")
+for emoticon, emotion, score in emotions:
+    print(f"'{emoticon}' → {emotion} (score: {score:.3f})")
+
+# Batch processing
+texts = ["Happy :)", "Sad :(", "Excited :D"]
+results = batch_analyze(texts)
+```
+
+### Sentiment Scoring System
+
+- **Very Positive (0.8-1.0)**: Love, Very Happy, Excited, Dancing Joy
+- **Positive (0.3-0.7)**: Smile, Happy, Wink, Hug, Kiss
+- **Neutral (0.0-0.2)**: Neutral, Tongue, Surprised, Confused
+- **Negative (-0.2 to -0.7)**: Sad, Crying, Worried, Annoyed
+- **Very Negative (-0.8 to -1.0)**: Angry, Rage, Table Flip
 
 ## Examples
 

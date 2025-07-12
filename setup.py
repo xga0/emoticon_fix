@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="emoticon_fix",
-    version="0.1.4",
+    version="0.2.0",
     author="Sean Gao",
     author_email="seangaoxy@gmail.com",
-    description="A lightweight and efficient library for transforming emoticons into their semantic meanings",
+    description="A lightweight and efficient library for transforming emoticons into their semantic meanings with sentiment analysis capabilities",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/xga0/emoticon_fix",

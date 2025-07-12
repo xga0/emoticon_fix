@@ -44,3 +44,27 @@ htmlcov/
 # Local development
 .DS_Store
 .env test.py
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+
+# System files
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Development and testing files
+test_sentiment_analysis.py
+demo_sentiment_extension.py
+run_all_tests.py
+SENTIMENT_ANALYSIS_EXTENSION.md
+CODE_VALIDATION_SUMMARY.md
