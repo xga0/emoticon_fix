@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "emoticon-fix"
+dynamic = ["version"]
+description = "A lightweight and efficient library for transforming emoticons into their semantic meanings with sentiment analysis capabilities"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Sean Gao", email = "seangaoxy@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Text Processing :: Linguistic",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+]
+requires-python = ">=3.6"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+    "black>=21.0",
+    "mypy>=0.800",
+    "flake8>=3.9",
+]
+
+[project.urls]
+Homepage = "https://github.com/xga0/emoticon_fix"
+Repository = "https://github.com/xga0/emoticon_fix"
+Documentation = "https://github.com/xga0/emoticon_fix#readme"
+"Bug Tracker" = "https://github.com/xga0/emoticon_fix/issues"
+
+[tool.setuptools]
+packages = ["emoticon_fix"]
+
+[tool.setuptools.dynamic]
+version = {attr = "emoticon_fix.__version__"}
+
+[tool.black]
+line-length = 88
+target-version = ['py36']
+
+[tool.pytest.ini_options]
+testpaths = ["test_emoticon_fix"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*" 

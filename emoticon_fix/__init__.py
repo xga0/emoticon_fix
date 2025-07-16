@@ -10,6 +10,8 @@ from .emoticon_fix import (
     SentimentAnalysis
 )
 
+__version__ = "0.2.0"
+
 __all__ = [
     'emoticon_fix', 
     'remove_emoticons', 
