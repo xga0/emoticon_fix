@@ -7,10 +7,18 @@ from .emoticon_fix import (
     classify_sentiment,
     extract_emotions,
     batch_analyze,
-    SentimentAnalysis
+    SentimentAnalysis,
+    # New analytics functionality
+    EmoticonStats,
+    EmoticonProfile,
+    get_emoticon_statistics,
+    create_emotion_profile,
+    compare_emotion_profiles,
+    export_analysis,
+    get_emoticon_trends
 )
 
-__version__ = "0.2.3"
+__version__ = "0.2.1"
 
 __all__ = [
     'emoticon_fix', 
@@ -21,5 +29,13 @@ __all__ = [
     'classify_sentiment',
     'extract_emotions',
     'batch_analyze',
-    'SentimentAnalysis'
+    'SentimentAnalysis',
+    # New analytics functionality
+    'EmoticonStats',
+    'EmoticonProfile',
+    'get_emoticon_statistics',
+    'create_emotion_profile',
+    'compare_emotion_profiles',
+    'export_analysis',
+    'get_emoticon_trends'
 ]

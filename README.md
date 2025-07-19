@@ -1,4 +1,4 @@
-# emoticon_fix
+# Emoticon Fix
 
 [![PyPI version](https://img.shields.io/pypi/v/emoticon-fix.svg)](https://pypi.org/project/emoticon-fix/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/emoticon-fix.svg)](https://pypi.org/project/emoticon-fix/)
@@ -14,6 +14,8 @@ A lightweight and efficient library for transforming emoticons into their semant
 - [Installation](#installation)
 - [Usage](#usage)
 - [Sentiment Analysis](#sentiment-analysis)
+- [Analytics & Statistics](#analytics--statistics)
+- [Data Export](#data-export)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Testing](#testing)
@@ -83,6 +85,115 @@ classification = classify_sentiment("Love this (｡♥‿♥｡) so much!")
 print(classification)  # "Very Positive"
 ```
 
+### New: Analytics & Statistics
+
+The analytics extension provides comprehensive emoticon usage analysis:
+
+```python
+from emoticon_fix import (
+    get_emoticon_statistics, 
+    create_emotion_profile, 
+    compare_emotion_profiles,
+    get_emoticon_trends
+)
+
+# Get detailed statistics about emoticon usage
+text = "Happy :) very :) extremely :D and sometimes sad :("
+stats = get_emoticon_statistics(text)
+
+print(f"Total emoticons: {stats.total_emoticons}")        # 4
+print(f"Unique emoticons: {stats.unique_emoticons}")      # 3
+print(f"Dominant emotion: {stats.dominant_emotion}")      # "Smile"
+print(f"Average sentiment: {stats.average_sentiment:.3f}") # 0.525
+print(f"Emoticon density: {stats.get_emoticon_density():.1f}%") # per 100 chars
+
+# Get top emoticons and emotions
+print("Top emoticons:", stats.get_top_emoticons(3))
+print("Top emotions:", stats.get_top_emotions(3))
+```
+
+### Emotion Profiling
+
+Create comprehensive emotion profiles for users or text collections:
+
+```python
+# Create emotion profile from multiple texts
+texts = [
+    "Having a great day :) :D",
+    "Feeling sad today :(",
+    "Mixed emotions :) but also :/ sometimes",
+    "Super excited! :D :D (｡♥‿♥｡)"
+]
+
+profile = create_emotion_profile(texts, "User Profile")
+
+print(f"Profile: {profile.name}")
+print(f"Texts analyzed: {profile.texts_analyzed}")
+print(f"Total emoticons: {profile.total_emoticons}")
+print(f"Overall sentiment: {profile.get_overall_sentiment():.3f}")
+print(f"Emotion diversity: {profile.get_emotion_diversity():.3f}")
+print(f"Sentiment consistency: {profile.get_sentiment_consistency():.3f}")
+
+# Get dominant emotions across all texts
+dominant_emotions = profile.get_dominant_emotions(5)
+print("Dominant emotions:", dominant_emotions)
+```
+
+### Profile Comparison
+
+Compare emotion patterns between different users or text collections:
+
+```python
+# Create multiple profiles
+happy_user = create_emotion_profile([
+    "Great day :D", "So happy :)", "Love this! (｡♥‿♥｡)"
+], "Happy User")
+
+sad_user = create_emotion_profile([
+    "Feeling down :(", "Bad day :(", "Not good :("
+], "Sad User")
+
+mixed_user = create_emotion_profile([
+    "Happy :) but worried :(", "Good :) and bad :(", "Mixed feelings :/ :)"
+], "Mixed User")
+
+# Compare profiles
+comparison = compare_emotion_profiles([happy_user, sad_user, mixed_user])
+
+print(f"Profiles compared: {comparison['profiles_compared']}")
+print("Sentiment range:", comparison['overall_comparison']['sentiment_range'])
+print("Diversity range:", comparison['overall_comparison']['diversity_range'])
+
+# Individual profile summaries
+for profile in comparison['profile_summaries']:
+    print(f"{profile['name']}: sentiment={profile['overall_sentiment']:.3f}")
+```
+
+### Trend Analysis
+
+Analyze emoticon trends across multiple texts or time periods:
+
+```python
+# Analyze trends across multiple texts
+texts = [
+    "Day 1: Excited to start :D",
+    "Day 2: Going well :)",
+    "Day 3: Some challenges :/",
+    "Day 4: Feeling better :)",
+    "Day 5: Great finish :D :D"
+]
+
+labels = [f"Day {i+1}" for i in range(len(texts))]
+trends = get_emoticon_trends(texts, labels)
+
+print(f"Total texts analyzed: {trends['total_texts']}")
+print("Sentiment trend:", trends['trend_summary']['sentiment_trend'])
+print("Average sentiment:", trends['trend_summary']['average_sentiment_across_texts'])
+
+# Most common emotions across all texts
+print("Most common emotions:", trends['trend_summary']['most_common_emotions'])
+```
+
 ## Sentiment Analysis
 
 The sentiment analysis extension provides powerful emotion detection capabilities:
@@ -122,6 +233,101 @@ results = batch_analyze(texts)
 - **Neutral (0.0-0.2)**: Neutral, Tongue, Surprised, Confused
 - **Negative (-0.2 to -0.7)**: Sad, Crying, Worried, Annoyed
 - **Very Negative (-0.8 to -1.0)**: Angry, Rage, Table Flip
+
+## Analytics & Statistics
+
+The analytics extension provides comprehensive emoticon usage analysis capabilities:
+
+### EmoticonStats Features
+
+- **Frequency Analysis**: Count emoticon and emotion occurrences
+- **Sentiment Distribution**: Categorize emoticons by sentiment
+- **Density Calculation**: Emoticons per 100 characters
+- **Position Tracking**: Track emoticon positions in text
+- **Top Rankings**: Get most frequent emoticons and emotions
+
+### EmoticonProfile Features
+
+- **Multi-text Analysis**: Aggregate statistics across multiple texts
+- **Emotion Diversity**: Measure variety of emotions used
+- **Sentiment Consistency**: Measure emotional stability over time
+- **Comparative Metrics**: Compare different users or periods
+
+### Advanced Analytics
+
+```python
+from emoticon_fix import get_emoticon_statistics, EmoticonProfile
+
+# Detailed emoticon statistics
+text = "Super happy :D today! Great mood :) and excited (｡♥‿♥｡) for later!"
+stats = get_emoticon_statistics(text)
+
+# Access detailed information
+print(f"Emoticon positions: {stats.emoticon_positions}")
+print(f"Sentiment distribution: {stats.sentiment_distribution}")
+print(f"Top 3 emoticons: {stats.get_top_emoticons(3)}")
+print(f"Analysis timestamp: {stats.analysis_timestamp}")
+
+# Create custom profile
+profile = EmoticonProfile("Custom Analysis")
+profile.add_text("First text :)", "text_1")
+profile.add_text("Second text :(", "text_2")
+profile.add_text("Third text :D", "text_3")
+
+print(f"Emotion diversity: {profile.get_emotion_diversity():.3f}")
+print(f"Sentiment consistency: {profile.get_sentiment_consistency():.3f}")
+```
+
+## Data Export
+
+Export analysis results for further processing or visualization:
+
+```python
+from emoticon_fix import export_analysis, get_emoticon_statistics, create_emotion_profile
+
+# Export statistics to JSON
+text = "Happy :) day with multiple :D emoticons!"
+stats = get_emoticon_statistics(text)
+
+# Export to JSON (default format)
+json_file = export_analysis(stats, format="json", filename="emoticon_stats.json")
+print(f"Exported to: {json_file}")
+
+# Export to CSV
+csv_file = export_analysis(stats, format="csv", filename="emoticon_stats.csv")
+print(f"Exported to: {csv_file}")
+
+# Export emotion profile
+texts = ["Happy :)", "Sad :(", "Excited :D"]
+profile = create_emotion_profile(texts, "Sample Profile")
+profile_file = export_analysis(profile, format="json", filename="emotion_profile.json")
+
+# Auto-generate filename with timestamp
+auto_file = export_analysis(stats)  # Creates: emoticon_analysis_YYYYMMDD_HHMMSS.json
+```
+
+### Export Formats
+
+**JSON Export**: Complete data structure with all metrics and metadata
+```json
+{
+  "total_emoticons": 3,
+  "unique_emoticons": 2,
+  "emoticon_density": 12.5,
+  "emoticon_frequency": {":)": 2, ":D": 1},
+  "emotion_frequency": {"Smile": 2, "Laugh": 1},
+  "sentiment_distribution": {"positive": 3, "negative": 0, "neutral": 0},
+  "average_sentiment": 0.8,
+  "dominant_emotion": "Smile",
+  "analysis_timestamp": "2024-01-15T10:30:00"
+}
+```
+
+**CSV Export**: Structured tabular format for spreadsheet analysis
+- Emoticon statistics with frequencies
+- Emotion breakdowns
+- Sentiment distributions
+- Compatible with Excel, Google Sheets, etc.
 
 ## Examples
 
@@ -176,6 +382,74 @@ result = replace_emoticons(text, tag_format="<EMOTION type='{tag}'>")
 print(result)  # Output: 'User feedback: Product was great <EMOTION type='Laugh'> but shipping was slow <EMOTION type='Sad'>'
 ```
 
+### Social Media Analysis Example
+```python
+from emoticon_fix import create_emotion_profile, compare_emotion_profiles, export_analysis
+
+# Analyze social media posts from different users
+user1_posts = [
+    "Amazing product! :D Love it!",
+    "Great customer service :)",
+    "Highly recommended! (｡♥‿♥｡)"
+]
+
+user2_posts = [
+    "Product was okay :/",
+    "Shipping was slow :(",
+    "Could be better... :/"
+]
+
+user3_posts = [
+    "Mixed experience :) good product but :( bad delivery",
+    "Happy with purchase :) but upset about delay :(",
+    "Overall satisfied :) despite issues :/"
+]
+
+# Create emotion profiles
+user1_profile = create_emotion_profile(user1_posts, "Satisfied Customer")
+user2_profile = create_emotion_profile(user2_posts, "Dissatisfied Customer")
+user3_profile = create_emotion_profile(user3_posts, "Mixed Customer")
+
+# Compare profiles
+comparison = compare_emotion_profiles([user1_profile, user2_profile, user3_profile])
+
+# Export results
+export_analysis(comparison, format="json", filename="customer_sentiment_analysis.json")
+
+print("Customer sentiment analysis completed!")
+print(f"Satisfied customer sentiment: {user1_profile.get_overall_sentiment():.3f}")
+print(f"Dissatisfied customer sentiment: {user2_profile.get_overall_sentiment():.3f}")
+print(f"Mixed customer sentiment: {user3_profile.get_overall_sentiment():.3f}")
+```
+
+### Time Series Analysis Example
+```python
+from emoticon_fix import get_emoticon_trends, export_analysis
+
+# Analyze emotional progression over time
+weekly_posts = [
+    "Week 1: Starting new job :) excited!",
+    "Week 2: Learning lots :D challenging but fun!",
+    "Week 3: Feeling overwhelmed :( too much work",
+    "Week 4: Getting better :) finding my rhythm",
+    "Week 5: Confident now :D loving the work!",
+    "Week 6: Stress again :( big project deadline",
+    "Week 7: Relief! :D Project completed successfully!",
+    "Week 8: Balanced now :) happy with progress"
+]
+
+week_labels = [f"Week {i+1}" for i in range(len(weekly_posts))]
+trends = get_emoticon_trends(weekly_posts, week_labels)
+
+# Export trend analysis
+export_analysis(trends, format="json", filename="emotional_journey.json")
+
+print("Emotional journey analysis:")
+sentiment_trend = trends['trend_summary']['sentiment_trend']
+for i, sentiment in enumerate(sentiment_trend):
+    print(f"Week {i+1}: {sentiment:.3f}")
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
@@ -188,7 +462,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ## Testing
 
-The package includes a test suite. To run the tests:
+The package includes a comprehensive test suite. To run the tests:
 
 ```bash
 pip install -e ".[dev]"
