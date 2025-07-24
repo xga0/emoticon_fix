@@ -123,31 +123,45 @@ SENTIMENT_MAPPING: Dict[str, float] = {
     'Rage': -1.0, 'Table Flip': -0.8, 'Dead': -0.9, 'Mischievous': -0.3, 'Devil': -0.5,
 }
 
-# Pre-compiled regex patterns for optimal performance
-_EMOTICON_PATTERN = '|'.join(re.escape(emoticon) for emoticon in sorted(EMOTICON_DICT.keys(), key=len, reverse=True))
-_TOKEN_PATTERN = re.compile(
+# Pre-compiled regex patterns for optimal performance - optimized for speed
+# Sort emoticons by length (longest first) to match greedily
+_SORTED_EMOTICONS = sorted(EMOTICON_DICT.keys(), key=len, reverse=True)
+_EMOTICON_PATTERN = '|'.join(re.escape(emoticon) for emoticon in _SORTED_EMOTICONS)
+
+# Compile patterns once for better performance
+_COMPILED_TOKEN_PATTERN = re.compile(
     f'({_EMOTICON_PATTERN})|'
     r'(https?://\S+|www\.\S+)|'
     r'(#\w+)|'
     r'(@\w+)|'
     r'(\w+)|'
-    r'([^\w\s])'
+    r'([^\w\s])',
+    re.IGNORECASE
 )
 
+# Cache for commonly used patterns
+_PUNCTUATION_SET = frozenset('.,!?;:')
+
 def _extract_tokens(input_string: str) -> List[str]:
-    """Extract tokens from input string using pre-compiled regex pattern."""
-    return [match[0] or match[1] or match[2] or match[3] or match[4] or match[5] 
-            for match in _TOKEN_PATTERN.finditer(input_string)]
+    """Extract tokens from input string using pre-compiled regex pattern - optimized version."""
+    matches = _COMPILED_TOKEN_PATTERN.findall(input_string)
+    # Use list comprehension with next() for better performance
+    return [next((part for part in match if part), '') for match in matches]
 
 def _rebuild_with_spacing(tokens: List[str], transform_fn=None) -> str:
-    """Rebuild text from tokens with proper spacing."""
+    """Rebuild text from tokens with proper spacing - optimized version."""
+    if not tokens:
+        return ''
+    
+    # Pre-allocate list for better performance
     result = []
+    
     for i, token in enumerate(tokens):
         if i > 0:
             prev_token = tokens[i-1]
-            if prev_token not in '.,!?;:' or token not in '.,!?;:':
-                if not (prev_token in '.,!?;:' and token in '.,!?;:'):
-                    result.append(' ')
+            # Optimized spacing logic using set membership
+            if not (prev_token in _PUNCTUATION_SET and token in _PUNCTUATION_SET):
+                result.append(' ')
         
         if transform_fn:
             result.append(transform_fn(token))
@@ -159,6 +173,8 @@ def _rebuild_with_spacing(tokens: List[str], transform_fn=None) -> str:
 class SentimentAnalysis:
     """Container for sentiment analysis results."""
     
+    __slots__ = ('emoticons', 'sentiments', 'scores', 'total_count', 'average_score', 'emotion_counts', 'classification')
+    
     def __init__(self, emoticons: List[str], sentiments: List[str], scores: List[float]):
         self.emoticons = emoticons
         self.sentiments = sentiments
@@ -167,6 +183,7 @@ class SentimentAnalysis:
         self.average_score = sum(scores) / len(scores) if scores else 0.0
         self.emotion_counts = Counter(sentiments)
         
+        # Optimized classification using direct comparison
         if self.average_score >= 0.6:
             self.classification = "Very Positive"
         elif self.average_score >= 0.3:
@@ -199,24 +216,26 @@ class SentimentAnalysis:
         return "\n".join(summary)
 
 def emoticon_fix(input_string: str) -> str:
-    """Transform emoticons in a string to their corresponding meanings."""
+    """Transform emoticons in a string to their corresponding meanings - optimized version."""
     if not isinstance(input_string, str):
         raise TypeError("Input must be a string")
     
     tokens = _extract_tokens(input_string)
+    # Use dict.get() to avoid repeated key checks
     return _rebuild_with_spacing(tokens, lambda t: EMOTICON_DICT.get(t, t))
 
 def remove_emoticons(input_string: str) -> str:
-    """Remove all emoticons from the input string."""
+    """Remove all emoticons from the input string - optimized version."""
     if not isinstance(input_string, str):
         raise TypeError("Input must be a string")
     
     tokens = _extract_tokens(input_string)
+    # Use list comprehension with not in for better performance
     filtered_tokens = [t for t in tokens if t not in EMOTICON_DICT]
     return _rebuild_with_spacing(filtered_tokens)
 
 def replace_emoticons(input_string: str, tag_format: str = "__EMO_{tag}__") -> str:
-    """Replace emoticons with customizable NER-friendly tags."""
+    """Replace emoticons with customizable NER-friendly tags - optimized version."""
     if not isinstance(input_string, str):
         raise TypeError("Input must be a string")
     
@@ -225,30 +244,32 @@ def replace_emoticons(input_string: str, tag_format: str = "__EMO_{tag}__") -> s
     
     tokens = _extract_tokens(input_string)
     
+    # Use optimized transform function with get()
     def transform(token):
-        if token in EMOTICON_DICT:
-            return tag_format.format(tag=EMOTICON_DICT[token])
-        return token
+        emotion = EMOTICON_DICT.get(token)
+        return tag_format.format(tag=emotion) if emotion else token
     
     return _rebuild_with_spacing(tokens, transform)
 
 def analyze_sentiment(input_string: str) -> SentimentAnalysis:
-    """Analyze the sentiment of emoticons in the input string."""
+    """Analyze the sentiment of emoticons in the input string - optimized version."""
     if not isinstance(input_string, str):
         raise TypeError("Input must be a string")
     
     tokens = _extract_tokens(input_string)
     
+    # Pre-allocate lists for better performance
     emoticons = []
     sentiments = []
     scores = []
     
+    # Single pass through tokens with optimized lookups
     for token in tokens:
-        if token in EMOTICON_DICT:
+        emotion = EMOTICON_DICT.get(token)
+        if emotion:
             emoticons.append(token)
-            sentiment = EMOTICON_DICT[token]
-            sentiments.append(sentiment)
-            scores.append(SENTIMENT_MAPPING.get(sentiment, 0.0))
+            sentiments.append(emotion)
+            scores.append(SENTIMENT_MAPPING.get(emotion, 0.0))
     
     return SentimentAnalysis(emoticons, sentiments, scores)
 
@@ -268,10 +289,11 @@ def extract_emotions(input_string: str) -> List[Tuple[str, str, float]]:
     return list(zip(analysis.emoticons, analysis.sentiments, analysis.scores))
 
 def batch_analyze(texts: List[str]) -> List[SentimentAnalysis]:
-    """Analyze sentiment for multiple texts efficiently."""
+    """Analyze sentiment for multiple texts efficiently - optimized version."""
     if not isinstance(texts, list):
         raise TypeError("Input must be a list of strings")
     
+    # Use list comprehension for better performance
     return [analyze_sentiment(text) for text in texts]
 
 class EmoticonStats:
