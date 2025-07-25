@@ -522,5 +522,380 @@ class TestEdgeCases:
             get_emoticon_trends("not a list")
 
 
+class TestPerformanceOptimizations:
+    """Test performance-related optimizations."""
+    
+    def test_large_input_performance(self):
+        """Test performance with large inputs."""
+        large_text = "Happy :) " * 10000  # 10k repetitions
+        result = emoticon_fix(large_text)
+        assert "Smile" in result
+        assert result.count("Smile") == 10000
+    
+    def test_many_different_emoticons(self):
+        """Test text with many different types of emoticons."""
+        emoticons = [':)', ':D', ':(', ':P', ';)', ':*', 'XD', 'QQ', '^_^', '(^_^)']
+        text = " ".join(emoticons * 100)  # 1000 emoticons total
+        result = emoticon_fix(text)
+        assert len(result.split()) >= 1000
+    
+    def test_regex_pattern_efficiency(self):
+        """Test that regex patterns match correctly and efficiently."""
+        # Test longest emoticons are matched first (greedy matching)
+        text = ":-) :)"  # Both should be detected
+        result = emoticon_fix(text)
+        assert result == "Smile Smile"
+        
+        # Test complex emoticons
+        text = "(╯°□°）╯︵ ┻━┻"
+        result = emoticon_fix(text)
+        assert "Table Flip" in result
+    
+    def test_precompiled_patterns(self):
+        """Test that precompiled patterns work correctly."""
+        from emoticon_fix.emoticon_fix import _COMPILED_TOKEN_PATTERN, _PUNCTUATION_SET
+        
+        # Test compiled pattern exists
+        assert _COMPILED_TOKEN_PATTERN is not None
+        
+        # Test punctuation set optimization
+        assert '.' in _PUNCTUATION_SET
+        assert 'a' not in _PUNCTUATION_SET
+
+
+class TestStressTests:
+    """Stress tests with extreme inputs."""
+    
+    def test_extremely_long_text(self):
+        """Test with extremely long text."""
+        base_text = "This is a test with :) and :D emoticons. "
+        long_text = base_text * 1000  # ~40k characters
+        result = emoticon_fix(long_text)
+        assert "Smile" in result
+        assert "Laugh" in result
+        assert len(result) > len(long_text)  # Should be longer due to replacements
+    
+    def test_dense_emoticon_text(self):
+        """Test text that's mostly emoticons."""
+        emoticon_text = ":):D:(:P;):*XD" * 500
+        result = emoticon_fix(emoticon_text)
+        assert "Smile" in result
+        assert "Laugh" in result
+        assert "Sad" in result
+    
+    def test_mixed_content_stress(self):
+        """Test mixed content with URLs, hashtags, mentions, and emoticons."""
+        mixed_text = (
+            "Check out https://example.com :) #happy @user123 "
+            "More text with :D and https://another-url.com/path?param=value "
+            "@mention #hashtag :( end"
+        ) * 200
+        
+        result = emoticon_fix(mixed_text)
+        assert "https://example.com" in result  # URLs preserved
+        assert "#happy" in result  # Hashtags preserved
+        assert "@user123" in result  # Mentions preserved
+        assert "Smile" in result
+        assert "Laugh" in result
+        assert "Sad" in result
+    
+    def test_no_emoticons_large_text(self):
+        """Test large text with no emoticons."""
+        no_emoticon_text = "This is regular text without any emoticons at all. " * 2000
+        result = emoticon_fix(no_emoticon_text)
+        # Should handle large text correctly and preserve content
+        assert "This is regular text" in result
+        assert "without any emoticons" in result
+        assert len(result) > 1000  # Should be substantial
+
+
+class TestUnicodeAndSpecialCharacters:
+    """Test Unicode and special character handling."""
+    
+    def test_unicode_emoticons(self):
+        """Test Unicode-based emoticons (kaomoji)."""
+        unicode_text = "Happy (◕‿◕) and excited ＼(^o^)／ today!"
+        result = emoticon_fix(unicode_text)
+        assert "Happy" in result
+        assert "today" in result
+        # Should handle Unicode emoticons properly
+    
+    def test_mixed_unicode_and_ascii(self):
+        """Test mixing Unicode and ASCII emoticons."""
+        mixed_text = "ASCII :) and Unicode (◕‿◕) together"
+        result = emoticon_fix(mixed_text)
+        assert "Smile" in result
+        assert "ASCII" in result
+        assert "together" in result
+    
+    def test_special_characters_preservation(self):
+        """Test that special characters are preserved correctly."""
+        special_text = "Money $100 :) and €200 :D plus ¥300 :("
+        result = emoticon_fix(special_text)
+        # Currency symbols are tokenized separately from numbers
+        assert "$" in result and "100" in result
+        assert "€" in result and "200" in result
+        assert "¥" in result and "300" in result
+        assert "Smile" in result
+        assert "Laugh" in result
+        assert "Sad" in result
+    
+    def test_emoji_vs_emoticon(self):
+        """Test that emoji don't interfere with emoticon processing."""
+        emoji_text = "Happy 😀 with emoticon :) and sad 😢 with emoticon :("
+        result = emoticon_fix(emoji_text)
+        assert "😀" in result  # Emoji preserved
+        assert "😢" in result  # Emoji preserved
+        assert "Smile" in result  # Emoticon converted
+        assert "Sad" in result  # Emoticon converted
+
+
+class TestIntegrationScenarios:
+    """Test integration scenarios combining multiple functions."""
+    
+    def test_full_pipeline_analysis(self):
+        """Test complete analysis pipeline."""
+        text = "Great day :D with friends :) but got sad :( later, now neutral :|"
+        
+        # Test all functions work together
+        fixed = emoticon_fix(text)
+        removed = remove_emoticons(text)
+        replaced = replace_emoticons(text)
+        sentiment = analyze_sentiment(text)
+        stats = get_emoticon_statistics(text)
+        profile = create_emotion_profile(text)
+        
+        assert "Laugh" in fixed
+        assert "Smile" in fixed
+        assert len(removed) < len(text)
+        assert "__EMO_" in replaced
+        assert sentiment.total_count == 4
+        assert stats.total_emoticons == 4
+        assert profile.total_emoticons == 4
+    
+    def test_batch_processing_integration(self):
+        """Test batch processing with multiple texts."""
+        texts = [
+            "Happy day :) :D",
+            "Sad day :( :(", 
+            "Neutral day :| :|",
+            "Mixed emotions :) :( :D"
+        ]
+        
+        # Batch analyze
+        batch_results = batch_analyze(texts)
+        assert len(batch_results) == 4
+        
+        # Trends analysis
+        trends = get_emoticon_trends(texts, ['Text1', 'Text2', 'Text3', 'Text4'])
+        assert trends['total_texts'] == 4
+        
+        # Profile comparison
+        profiles = [create_emotion_profile(text, f"Profile{i}") for i, text in enumerate(texts)]
+        comparison = compare_emotion_profiles(profiles)
+        assert comparison['profiles_compared'] == 4
+    
+    def test_export_import_cycle(self):
+        """Test export and verify exported data."""
+        text = "Testing :) export :D functionality :("
+        stats = get_emoticon_statistics(text)
+        
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Export to JSON
+            json_file = os.path.join(temp_dir, "test_export.json")
+            result_file = export_analysis(stats, "json", json_file)
+            
+            # Verify export
+            assert os.path.exists(result_file)
+            
+            # Read and verify content
+            with open(result_file, 'r') as f:
+                data = json.load(f)
+                assert data['total_emoticons'] == 3
+                assert 'Smile' in data['emotion_frequency']
+
+
+class TestBoundaryConditions:
+    """Test boundary conditions and edge cases."""
+    
+    def test_single_character_inputs(self):
+        """Test single character inputs."""
+        assert emoticon_fix("a") == "a"
+        assert emoticon_fix(":") == ":"
+        assert emoticon_fix(")") == ")"
+        assert emoticon_fix(" ") == ""
+    
+    def test_only_punctuation(self):
+        """Test inputs with only punctuation."""
+        punct_text = ".,!?;:"
+        result = emoticon_fix(punct_text)
+        assert len(result) > 0
+    
+    def test_only_emoticons(self):
+        """Test inputs with only emoticons."""
+        emoticon_only = ":):D:("
+        result = emoticon_fix(emoticon_only)
+        assert "Smile" in result
+        assert "Laugh" in result
+        assert "Sad" in result
+    
+    def test_repeated_emoticons(self):
+        """Test repeated identical emoticons."""
+        repeated = ":)" * 100
+        result = emoticon_fix(repeated)
+        assert result.count("Smile") == 100
+    
+    def test_whitespace_variations(self):
+        """Test various whitespace scenarios."""
+        test_cases = [
+            "  :)  ",
+            "\t:)\t",
+            "\n:)\n",
+            "  :)  :D  ",
+            ":)\n\n:D"
+        ]
+        
+        for text in test_cases:
+            result = emoticon_fix(text)
+            assert "Smile" in result
+    
+    def test_malformed_emoticons(self):
+        """Test handling of malformed or partial emoticons."""
+        malformed_cases = [
+            ": )",  # Space in middle
+            ":-",   # Incomplete
+            "):(",  # Reversed
+            "::)",  # Extra colon
+            ":))",  # Extra parenthesis
+        ]
+        
+        for text in malformed_cases:
+            result = emoticon_fix(text)
+            # Should not crash and should handle gracefully
+            assert isinstance(result, str)
+
+
+class TestErrorHandling:
+    """Test comprehensive error handling."""
+    
+    def test_type_errors_comprehensive(self):
+        """Test type errors for all functions."""
+        invalid_inputs = [None, 123, [], {}, set()]
+        
+        for invalid_input in invalid_inputs:
+            with pytest.raises((TypeError, AttributeError)):
+                emoticon_fix(invalid_input)
+            
+            with pytest.raises((TypeError, AttributeError)):
+                remove_emoticons(invalid_input)
+            
+            with pytest.raises((TypeError, AttributeError)):
+                analyze_sentiment(invalid_input)
+    
+    def test_invalid_tag_format(self):
+        """Test invalid tag formats for replace_emoticons."""
+        with pytest.raises(ValueError):
+            replace_emoticons("test :)", "invalid_format")
+        
+        with pytest.raises(ValueError):
+            replace_emoticons("test :)", "no_placeholder_here")
+    
+    def test_empty_inputs_all_functions(self):
+        """Test empty inputs across all functions."""
+        empty_text = ""
+        
+        assert emoticon_fix(empty_text) == ""
+        assert remove_emoticons(empty_text) == ""
+        assert replace_emoticons(empty_text) == ""
+        
+        sentiment = analyze_sentiment(empty_text)
+        assert sentiment.total_count == 0
+        
+        stats = get_emoticon_statistics(empty_text)
+        assert stats.total_emoticons == 0
+
+
+class TestMemoryEfficiency:
+    """Test memory efficiency improvements."""
+    
+    def test_slots_usage(self):
+        """Test that __slots__ is working for SentimentAnalysis."""
+        sentiment = analyze_sentiment("Happy :)")
+        
+        # Should have __slots__ defined
+        assert hasattr(sentiment.__class__, '__slots__')
+        
+        # Should not be able to add arbitrary attributes
+        with pytest.raises(AttributeError):
+            sentiment.arbitrary_attribute = "test"
+    
+    def test_large_data_memory_usage(self):
+        """Test memory usage with large datasets."""
+        # Create large dataset
+        large_texts = [f"Text {i} with :) emoticon" for i in range(1000)]
+        
+        # Should handle large batch without memory issues
+        results = batch_analyze(large_texts)
+        assert len(results) == 1000
+        
+        # All should have detected the emoticon
+        for result in results:
+            assert result.total_count == 1
+
+
+class TestRegexPatterns:
+    """Test regex pattern functionality."""
+    
+    def test_pattern_matching_order(self):
+        """Test that longer patterns are matched first."""
+        # Test emoticons that could be subsets of others
+        text = ":-) :)"
+        result = emoticon_fix(text)
+        assert result == "Smile Smile"
+    
+    def test_url_preservation(self):
+        """Test that URLs are preserved correctly."""
+        # Test supported URL patterns (http/https/www)
+        supported_urls = [
+            "https://example.com",
+            "http://test.org", 
+            "www.example.com"
+        ]
+        
+        for url in supported_urls:
+            text = f"Check {url} :) for info"
+            result = emoticon_fix(text)
+            assert url in result
+            assert "Smile" in result
+        
+        # Test that emoticons still work with URLs
+        text = "Visit https://example.com :) for more info :D"
+        result = emoticon_fix(text)
+        assert "https://example.com" in result
+        assert "Smile" in result
+        assert "Laugh" in result
+    
+    def test_hashtag_mention_preservation(self):
+        """Test hashtags and mentions are preserved."""
+        text = "Follow @user #hashtag :) and @another #tag :D"
+        result = emoticon_fix(text)
+        
+        assert "@user" in result
+        assert "#hashtag" in result
+        assert "@another" in result
+        assert "#tag" in result
+        assert "Smile" in result
+        assert "Laugh" in result
+    
+    def test_case_insensitive_matching(self):
+        """Test case insensitive matching where applicable."""
+        # Test case variations of emoticons
+        test_cases = ["xd", "XD", "Xd", "xD"]
+        
+        for case_var in test_cases:
+            result = emoticon_fix(f"Laughing {case_var}")
+            assert "Laugh" in result
+
+
 if __name__ == "__main__":
     pytest.main([__file__]) 
