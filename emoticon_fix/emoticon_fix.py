@@ -665,3 +665,358 @@ def get_emoticon_trends(texts: List[str], text_labels: Optional[List[str]] = Non
     }
     
     return trends
+
+
+# Text Preprocessing Pipeline Feature
+class PipelineStep:
+    """Base class for pipeline steps."""
+    
+    def __init__(self, name: str):
+        self.name = name
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        """Process text and return transformed result."""
+        raise NotImplementedError("Subclasses must implement process method")
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        """Get metadata about the processing step."""
+        return {"step": self.name}
+
+
+class EmoticonFixStep(PipelineStep):
+    """Pipeline step for fixing emoticons."""
+    
+    def __init__(self):
+        super().__init__("emoticon_fix")
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        return emoticon_fix(text)
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        original_stats = get_emoticon_statistics(text)
+        processed = self.process(text)
+        return {
+            "step": self.name,
+            "emoticons_found": original_stats.total_emoticons,
+            "unique_emoticons": original_stats.unique_emoticons,
+            "emotions_converted": dict(original_stats.emotion_frequency)
+        }
+
+
+class RemoveEmoticonStep(PipelineStep):
+    """Pipeline step for removing emoticons."""
+    
+    def __init__(self):
+        super().__init__("remove_emoticons")
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        return remove_emoticons(text)
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        original_stats = get_emoticon_statistics(text)
+        return {
+            "step": self.name,
+            "emoticons_removed": original_stats.total_emoticons,
+            "unique_emoticons_removed": original_stats.unique_emoticons
+        }
+
+
+class ReplaceEmoticonStep(PipelineStep):
+    """Pipeline step for replacing emoticons with tags."""
+    
+    def __init__(self, tag_format: str = "__EMO_{tag}__"):
+        super().__init__("replace_emoticons")
+        self.tag_format = tag_format
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        return replace_emoticons(text, self.tag_format)
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        original_stats = get_emoticon_statistics(text)
+        return {
+            "step": self.name,
+            "tag_format": self.tag_format,
+            "emoticons_replaced": original_stats.total_emoticons,
+            "emotions_tagged": dict(original_stats.emotion_frequency)
+        }
+
+
+class SentimentAnalysisStep(PipelineStep):
+    """Pipeline step for sentiment analysis."""
+    
+    def __init__(self, store_analysis: bool = True):
+        super().__init__("sentiment_analysis")
+        self.store_analysis = store_analysis
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        # This step doesn't modify text, but stores analysis in context
+        if context is not None and self.store_analysis:
+            context[f"{self.name}_result"] = analyze_sentiment(text)
+        return text
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        analysis = analyze_sentiment(text)
+        return {
+            "step": self.name,
+            "sentiment_score": analysis.average_score,
+            "sentiment_classification": analysis.classification,
+            "emoticons_analyzed": analysis.total_count,
+            "emotion_breakdown": dict(analysis.emotion_counts)
+        }
+
+
+class TextCleaningStep(PipelineStep):
+    """Pipeline step for general text cleaning."""
+    
+    def __init__(self, normalize_whitespace: bool = True, remove_extra_punctuation: bool = False):
+        super().__init__("text_cleaning")
+        self.normalize_whitespace = normalize_whitespace
+        self.remove_extra_punctuation = remove_extra_punctuation
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        result = text
+        
+        if self.normalize_whitespace:
+            # Replace multiple whitespace with single space
+            result = re.sub(r'\s+', ' ', result).strip()
+        
+        if self.remove_extra_punctuation:
+            # Replace repeated punctuation (2+ occurrences) with single occurrence
+            result = re.sub(r'([.!?]){2,}', r'\1', result)
+        
+        return result
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        original_length = len(text)
+        processed = self.process(text)
+        return {
+            "step": self.name,
+            "original_length": original_length,
+            "processed_length": len(processed),
+            "character_reduction": original_length - len(processed),
+            "normalize_whitespace": self.normalize_whitespace,
+            "remove_extra_punctuation": self.remove_extra_punctuation
+        }
+
+
+class CustomStep(PipelineStep):
+    """Custom pipeline step with user-defined function."""
+    
+    def __init__(self, name: str, func: callable, **kwargs):
+        super().__init__(name)
+        self.func = func
+        self.kwargs = kwargs
+    
+    def process(self, text: str, context: Dict = None) -> str:
+        return self.func(text, **self.kwargs)
+    
+    def get_metadata(self, text: str, context: Dict = None) -> Dict:
+        return {
+            "step": self.name,
+            "function": self.func.__name__ if hasattr(self.func, '__name__') else str(self.func),
+            "kwargs": self.kwargs
+        }
+
+
+class TextPreprocessingPipeline:
+    """A configurable text preprocessing pipeline that chains multiple operations."""
+    
+    def __init__(self, name: str = "TextPipeline"):
+        self.name = name
+        self.steps = []
+        self.results_cache = {}
+        self.enable_caching = False
+        self.enable_metadata = False
+        self.creation_timestamp = datetime.now().isoformat()
+    
+    def add_step(self, step: PipelineStep) -> 'TextPreprocessingPipeline':
+        """Add a step to the pipeline."""
+        if not isinstance(step, PipelineStep):
+            raise TypeError("Step must be an instance of PipelineStep")
+        self.steps.append(step)
+        return self
+    
+    def add_emoticon_fix(self) -> 'TextPreprocessingPipeline':
+        """Add emoticon fixing step."""
+        return self.add_step(EmoticonFixStep())
+    
+    def add_remove_emoticons(self) -> 'TextPreprocessingPipeline':
+        """Add emoticon removal step."""
+        return self.add_step(RemoveEmoticonStep())
+    
+    def add_replace_emoticons(self, tag_format: str = "__EMO_{tag}__") -> 'TextPreprocessingPipeline':
+        """Add emoticon replacement step."""
+        return self.add_step(ReplaceEmoticonStep(tag_format))
+    
+    def add_sentiment_analysis(self, store_analysis: bool = True) -> 'TextPreprocessingPipeline':
+        """Add sentiment analysis step."""
+        return self.add_step(SentimentAnalysisStep(store_analysis))
+    
+    def add_text_cleaning(self, normalize_whitespace: bool = True, remove_extra_punctuation: bool = False) -> 'TextPreprocessingPipeline':
+        """Add text cleaning step."""
+        return self.add_step(TextCleaningStep(normalize_whitespace, remove_extra_punctuation))
+    
+    def add_custom_step(self, name: str, func: callable, **kwargs) -> 'TextPreprocessingPipeline':
+        """Add custom processing step."""
+        return self.add_step(CustomStep(name, func, **kwargs))
+    
+    def enable_cache(self, enable: bool = True) -> 'TextPreprocessingPipeline':
+        """Enable/disable result caching."""
+        self.enable_caching = enable
+        return self
+    
+    def enable_metadata_collection(self, enable: bool = True) -> 'TextPreprocessingPipeline':
+        """Enable/disable metadata collection."""
+        self.enable_metadata = enable
+        return self
+    
+    def clear_cache(self):
+        """Clear the results cache."""
+        self.results_cache.clear()
+    
+    def process(self, text: str, collect_metadata: bool = None) -> Union[str, Tuple[str, Dict]]:
+        """Process text through the pipeline."""
+        if not isinstance(text, str):
+            raise TypeError("Input must be a string")
+        
+        if not self.steps:
+            if collect_metadata or self.enable_metadata:
+                return text, {"steps": [], "pipeline": self.name}
+            return text
+        
+        # Check cache
+        cache_key = hash(text + str([step.name for step in self.steps]))
+        if self.enable_caching and cache_key in self.results_cache:
+            cached_result = self.results_cache[cache_key]
+            if collect_metadata or self.enable_metadata:
+                return cached_result['result'], cached_result['metadata']
+            return cached_result['result']
+        
+        # Process through pipeline
+        current_text = text
+        context = {}
+        metadata = {
+            "pipeline": self.name,
+            "original_text": text,
+            "steps": [],
+            "processing_timestamp": datetime.now().isoformat()
+        }
+        
+        for i, step in enumerate(self.steps):
+            step_start_time = datetime.now()
+            
+            # Collect metadata if requested
+            if collect_metadata or self.enable_metadata:
+                step_metadata = step.get_metadata(current_text, context)
+                step_metadata["step_index"] = i
+                step_metadata["input_length"] = len(current_text)
+            
+            # Process the text
+            processed_text = step.process(current_text, context)
+            
+            # Complete metadata
+            if collect_metadata or self.enable_metadata:
+                step_end_time = datetime.now()
+                step_metadata["output_length"] = len(processed_text)
+                step_metadata["processing_time_ms"] = (step_end_time - step_start_time).total_seconds() * 1000
+                metadata["steps"].append(step_metadata)
+            
+            current_text = processed_text
+        
+        # Final metadata
+        if collect_metadata or self.enable_metadata:
+            metadata["final_length"] = len(current_text)
+            metadata["total_character_change"] = len(current_text) - len(text)
+            metadata["context"] = context
+        
+        # Cache result
+        if self.enable_caching:
+            cache_result = {
+                'result': current_text,
+                'metadata': metadata if (collect_metadata or self.enable_metadata) else None
+            }
+            self.results_cache[cache_key] = cache_result
+        
+        if collect_metadata or self.enable_metadata:
+            return current_text, metadata
+        return current_text
+    
+    def process_batch(self, texts: List[str], collect_metadata: bool = None) -> Union[List[str], List[Tuple[str, Dict]]]:
+        """Process multiple texts through the pipeline."""
+        if not isinstance(texts, list):
+            raise TypeError("Input must be a list of strings")
+        
+        results = []
+        for text in texts:
+            result = self.process(text, collect_metadata)
+            results.append(result)
+        
+        return results
+    
+    def get_step_names(self) -> List[str]:
+        """Get names of all steps in the pipeline."""
+        return [step.name for step in self.steps]
+    
+    def remove_step(self, step_name: str) -> bool:
+        """Remove a step by name. Returns True if step was found and removed."""
+        for i, step in enumerate(self.steps):
+            if step.name == step_name:
+                self.steps.pop(i)
+                return True
+        return False
+    
+    def get_step(self, step_name: str) -> Optional[PipelineStep]:
+        """Get a step by name."""
+        for step in self.steps:
+            if step.name == step_name:
+                return step
+        return None
+    
+    def clone(self) -> 'TextPreprocessingPipeline':
+        """Create a copy of the pipeline."""
+        new_pipeline = TextPreprocessingPipeline(f"{self.name}_copy")
+        new_pipeline.steps = self.steps.copy()
+        new_pipeline.enable_caching = self.enable_caching
+        new_pipeline.enable_metadata = self.enable_metadata
+        return new_pipeline
+    
+    def to_dict(self) -> Dict:
+        """Convert pipeline configuration to dictionary."""
+        return {
+            "name": self.name,
+            "steps": [{"name": step.name, "type": type(step).__name__} for step in self.steps],
+            "step_count": len(self.steps),
+            "caching_enabled": self.enable_caching,
+            "metadata_enabled": self.enable_metadata,
+            "creation_timestamp": self.creation_timestamp
+        }
+    
+    def __str__(self) -> str:
+        step_names = " -> ".join(step.name for step in self.steps)
+        return f"TextPreprocessingPipeline('{self.name}': {step_names})"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+
+
+def create_standard_pipeline(name: str = "StandardPipeline") -> TextPreprocessingPipeline:
+    """Create a standard preprocessing pipeline with common steps."""
+    return (TextPreprocessingPipeline(name)
+            .add_text_cleaning(normalize_whitespace=True, remove_extra_punctuation=True)
+            .add_emoticon_fix()
+            .add_sentiment_analysis())
+
+
+def create_ner_pipeline(tag_format: str = "__EMO_{tag}__", name: str = "NERPipeline") -> TextPreprocessingPipeline:
+    """Create a pipeline optimized for NER tasks."""
+    return (TextPreprocessingPipeline(name)
+            .add_text_cleaning(normalize_whitespace=True)
+            .add_replace_emoticons(tag_format)
+            .add_sentiment_analysis())
+
+
+def create_analysis_pipeline(name: str = "AnalysisPipeline") -> TextPreprocessingPipeline:
+    """Create a pipeline focused on analysis without text modification."""
+    return (TextPreprocessingPipeline(name)
+            .add_sentiment_analysis()
+            .enable_metadata_collection())

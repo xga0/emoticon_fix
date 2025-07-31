@@ -16,6 +16,7 @@ A lightweight and efficient library for transforming emoticons into their semant
 - [Sentiment Analysis](#sentiment-analysis)
 - [Analytics & Statistics](#analytics--statistics)
 - [Data Export](#data-export)
+- [Text Preprocessing Pipeline](#text-preprocessing-pipeline)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [Testing](#testing)
@@ -328,6 +329,289 @@ auto_file = export_analysis(stats)  # Creates: emoticon_analysis_YYYYMMDD_HHMMSS
 - Emotion breakdowns
 - Sentiment distributions
 - Compatible with Excel, Google Sheets, etc.
+
+## Text Preprocessing Pipeline
+
+The text preprocessing pipeline feature allows you to chain multiple emoticon processing operations together in a configurable, reusable workflow. This is particularly useful for NLP workflows where you need consistent text preprocessing across multiple texts or datasets.
+
+### Basic Pipeline Usage
+
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+# Create a custom pipeline
+pipeline = (TextPreprocessingPipeline("MyPipeline")
+           .add_text_cleaning(normalize_whitespace=True, remove_extra_punctuation=True)
+           .add_emoticon_fix()
+           .add_sentiment_analysis())
+
+# Process text
+text = "Hello   world!!!   :)   Great   day   :D"
+result = pipeline.process(text)
+print(result)  # Output: "Hello world! Smile Great day Laugh"
+
+# Process with metadata
+result, metadata = pipeline.process(text, collect_metadata=True)
+print(f"Processed: {result}")
+print(f"Pipeline: {metadata['pipeline']}")
+print(f"Steps executed: {len(metadata['steps'])}")
+```
+
+### Pipeline Steps
+
+The pipeline supports various built-in steps:
+
+#### Text Cleaning Step
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+pipeline = TextPreprocessingPipeline("Cleaning")
+pipeline.add_text_cleaning(
+    normalize_whitespace=True,     # Replace multiple spaces with single space
+    remove_extra_punctuation=True  # Replace repeated punctuation with single
+)
+
+text = "Text   with!!!   extra   spaces???"
+result = pipeline.process(text)  # "Text with! extra spaces?"
+```
+
+#### Emoticon Processing Steps
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+# Fix emoticons (convert to text)
+pipeline = TextPreprocessingPipeline("Fix").add_emoticon_fix()
+
+# Remove emoticons completely
+pipeline = TextPreprocessingPipeline("Remove").add_remove_emoticons()
+
+# Replace emoticons with NER tags
+pipeline = TextPreprocessingPipeline("Tag").add_replace_emoticons("__EMO_{tag}__")
+
+# Sentiment analysis (doesn't modify text, stores results in context)
+pipeline = TextPreprocessingPipeline("Analysis").add_sentiment_analysis()
+```
+
+#### Custom Steps
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+def uppercase_transform(text, prefix=""):
+    return prefix + text.upper()
+
+pipeline = (TextPreprocessingPipeline("Custom")
+           .add_custom_step("uppercase", uppercase_transform, prefix=">>> "))
+
+result = pipeline.process("hello world")  # ">>> HELLO WORLD"
+```
+
+### Prebuilt Pipelines
+
+Use prebuilt pipelines for common use cases:
+
+#### Standard Pipeline
+```python
+from emoticon_fix import create_standard_pipeline
+
+# Creates: text_cleaning -> emoticon_fix -> sentiment_analysis
+pipeline = create_standard_pipeline("StandardProcessing")
+
+text = "Great   day!!!  :D   with   friends  :)"
+result = pipeline.process(text)
+print(result)  # "Great day! Laugh with friends Smile"
+```
+
+#### NER Pipeline
+```python
+from emoticon_fix import create_ner_pipeline
+
+# Creates: text_cleaning -> replace_emoticons -> sentiment_analysis
+# Optimized for Named Entity Recognition tasks
+pipeline = create_ner_pipeline("__EMOTION_{tag}__", "NERProcessing")
+
+text = "Happy  :)  customer  feedback"
+result = pipeline.process(text)
+print(result)  # "Happy __EMOTION_Smile__ customer feedback"
+```
+
+#### Analysis Pipeline
+```python
+from emoticon_fix import create_analysis_pipeline
+
+# Creates: sentiment_analysis (with metadata enabled)
+# For analysis without text modification
+pipeline = create_analysis_pipeline("AnalysisOnly")
+
+text = "Customer feedback: Great product :D but slow shipping :("
+result, metadata = pipeline.process(text)
+
+print(f"Text unchanged: {result}")
+print(f"Sentiment: {metadata['context']['sentiment_analysis_result'].classification}")
+```
+
+### Advanced Pipeline Features
+
+#### Caching
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+pipeline = (TextPreprocessingPipeline("CachedPipeline")
+           .add_emoticon_fix()
+           .enable_cache())
+
+# First processing (computed)
+result1 = pipeline.process("Happy :)")
+
+# Second processing (cached)
+result2 = pipeline.process("Happy :)")  # Same result, faster
+
+# Clear cache when needed
+pipeline.clear_cache()
+```
+
+#### Batch Processing
+```python
+from emoticon_fix import create_standard_pipeline
+
+pipeline = create_standard_pipeline()
+
+texts = [
+    "Happy day :)",
+    "Sad news :(",
+    "Excited for tomorrow :D"
+]
+
+results = pipeline.process_batch(texts)
+for result in results:
+    print(result)
+```
+
+#### Step Management
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+pipeline = (TextPreprocessingPipeline("Manageable")
+           .add_text_cleaning()
+           .add_emoticon_fix()
+           .add_sentiment_analysis())
+
+# Get step names
+print(pipeline.get_step_names())  # ['text_cleaning', 'emoticon_fix', 'sentiment_analysis']
+
+# Remove a step
+pipeline.remove_step("sentiment_analysis")
+
+# Get specific step
+cleaning_step = pipeline.get_step("text_cleaning")
+
+# Clone pipeline
+new_pipeline = pipeline.clone()
+```
+
+#### Metadata Collection
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+pipeline = (TextPreprocessingPipeline("MetadataPipeline")
+           .add_emoticon_fix()
+           .add_sentiment_analysis()
+           .enable_metadata_collection())  # Always collect metadata
+
+result, metadata = pipeline.process("Happy :D day!")
+
+print(f"Pipeline: {metadata['pipeline']}")
+print(f"Total processing time: {sum(step['processing_time_ms'] for step in metadata['steps']):.2f}ms")
+
+for step in metadata['steps']:
+    print(f"Step {step['step']}: {step['processing_time_ms']:.2f}ms")
+```
+
+### Pipeline Serialization
+
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+pipeline = (TextPreprocessingPipeline("SaveablePipeline")
+           .add_text_cleaning()
+           .add_emoticon_fix()
+           .enable_cache())
+
+# Export pipeline configuration
+config = pipeline.to_dict()
+print(config)
+# {
+#   "name": "SaveablePipeline",
+#   "steps": [
+#     {"name": "text_cleaning", "type": "TextCleaningStep"},
+#     {"name": "emoticon_fix", "type": "EmoticonFixStep"}
+#   ],
+#   "step_count": 2,
+#   "caching_enabled": True,
+#   "metadata_enabled": False,
+#   "creation_timestamp": "2024-01-15T10:30:00"
+# }
+```
+
+### Use Case Examples
+
+#### Social Media Content Processing
+```python
+from emoticon_fix import create_standard_pipeline
+
+# Pipeline for social media posts
+social_pipeline = create_standard_pipeline("SocialMedia")
+
+posts = [
+    "Just had the best coffee :D #coffeelover",
+    "Traffic is terrible today :( #commute", 
+    "Weekend vibes!!! :) :) Can't wait!!!"
+]
+
+processed_posts = social_pipeline.process_batch(posts)
+for original, processed in zip(posts, processed_posts):
+    print(f"Original: {original}")
+    print(f"Processed: {processed}")
+    print()
+```
+
+#### Customer Feedback Analysis
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+# Pipeline for customer feedback
+feedback_pipeline = (TextPreprocessingPipeline("CustomerFeedback")
+                    .add_text_cleaning(normalize_whitespace=True, remove_extra_punctuation=True)
+                    .add_replace_emoticons("__SENTIMENT_{tag}__")
+                    .add_sentiment_analysis()
+                    .enable_metadata_collection())
+
+feedback = "Product quality is amazing!!! :D But shipping was slow... :("
+result, metadata = feedback_pipeline.process(feedback)
+
+print(f"Processed feedback: {result}")
+sentiment_analysis = metadata['context']['sentiment_analysis_result']
+print(f"Overall sentiment: {sentiment_analysis.classification}")
+print(f"Sentiment score: {sentiment_analysis.average_score:.3f}")
+```
+
+#### Research Data Preprocessing
+```python
+from emoticon_fix import TextPreprocessingPipeline
+
+# Pipeline for research data
+research_pipeline = (TextPreprocessingPipeline("Research")
+                    .add_text_cleaning(normalize_whitespace=True)
+                    .add_emoticon_fix()
+                    .add_sentiment_analysis()
+                    .enable_cache()  # Cache for repeated analysis
+                    .enable_metadata_collection())
+
+# Process large dataset
+research_texts = ["Text with :) emotions" for _ in range(1000)]
+results = research_pipeline.process_batch(research_texts)
+
+print(f"Processed {len(results)} texts with caching enabled")
+```
 
 ## Examples
 

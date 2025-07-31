@@ -897,5 +897,399 @@ class TestRegexPatterns:
             assert "Laugh" in result
 
 
+class TestPipelineSteps:
+    """Test individual pipeline step functionality."""
+    
+    def test_emoticon_fix_step(self):
+        """Test EmoticonFixStep."""
+        from emoticon_fix import EmoticonFixStep
+        
+        step = EmoticonFixStep()
+        assert step.name == "emoticon_fix"
+        
+        result = step.process("Happy :)")
+        assert result == "Happy Smile"
+        
+        metadata = step.get_metadata("Happy :) and sad :(")
+        assert metadata["emoticons_found"] == 2
+        assert metadata["unique_emoticons"] == 2
+    
+    def test_remove_emoticon_step(self):
+        """Test RemoveEmoticonStep."""
+        from emoticon_fix import RemoveEmoticonStep
+        
+        step = RemoveEmoticonStep()
+        assert step.name == "remove_emoticons"
+        
+        result = step.process("Happy :) World")
+        assert "Happy" in result
+        assert "World" in result
+        assert ":)" not in result
+        
+        metadata = step.get_metadata("Happy :)")
+        assert metadata["emoticons_removed"] == 1
+    
+    def test_replace_emoticon_step(self):
+        """Test ReplaceEmoticonStep."""
+        from emoticon_fix import ReplaceEmoticonStep
+        
+        step = ReplaceEmoticonStep()
+        result = step.process("Happy :)")
+        assert "__EMO_Smile__" in result
+        
+        # Test custom format
+        custom_step = ReplaceEmoticonStep("<EMO:{tag}>")
+        result = custom_step.process("Happy :)")
+        assert "<EMO:Smile>" in result
+    
+    def test_sentiment_analysis_step(self):
+        """Test SentimentAnalysisStep."""
+        from emoticon_fix import SentimentAnalysisStep
+        
+        step = SentimentAnalysisStep()
+        context = {}
+        result = step.process("Happy :)", context)
+        
+        assert result == "Happy :)"  # Text unchanged
+        assert "sentiment_analysis_result" in context
+        
+        metadata = step.get_metadata("Happy :)")
+        assert metadata["sentiment_score"] > 0
+        assert metadata["sentiment_classification"] in ["Positive", "Very Positive"]
+    
+    def test_text_cleaning_step(self):
+        """Test TextCleaningStep."""
+        from emoticon_fix import TextCleaningStep
+        
+        # Test whitespace normalization
+        step = TextCleaningStep(normalize_whitespace=True)
+        result = step.process("Text   with    extra   spaces")
+        assert result == "Text with extra spaces"
+        
+        # Test punctuation cleaning
+        step = TextCleaningStep(remove_extra_punctuation=True)
+        result = step.process("What!!! Really???")
+        assert result == "What! Really?"
+        
+        # Test both
+        step = TextCleaningStep(normalize_whitespace=True, remove_extra_punctuation=True)
+        result = step.process("Text   with!!!   extra   spaces???")
+        assert result == "Text with! extra spaces?"
+    
+    def test_custom_step(self):
+        """Test CustomStep."""
+        from emoticon_fix import CustomStep
+        
+        def uppercase_func(text, prefix=""):
+            return prefix + text.upper()
+        
+        step = CustomStep("uppercase", uppercase_func, prefix=">>> ")
+        result = step.process("hello world")
+        assert result == ">>> HELLO WORLD"
+        
+        metadata = step.get_metadata("test")
+        assert metadata["function"] == "uppercase_func"
+        assert metadata["kwargs"] == {"prefix": ">>> "}
+
+
+class TestTextPreprocessingPipeline:
+    """Test TextPreprocessingPipeline functionality."""
+    
+    def test_pipeline_creation(self):
+        """Test pipeline creation and configuration."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = TextPreprocessingPipeline("TestPipeline")
+        assert pipeline.name == "TestPipeline"
+        assert len(pipeline.steps) == 0
+        assert not pipeline.enable_caching
+        assert not pipeline.enable_metadata
+    
+    def test_add_steps_fluent_interface(self):
+        """Test fluent interface for adding steps."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_emoticon_fix()
+                   .add_sentiment_analysis()
+                   .enable_cache()
+                   .enable_metadata_collection())
+        
+        assert len(pipeline.steps) == 2
+        assert pipeline.enable_caching
+        assert pipeline.enable_metadata
+        assert pipeline.get_step_names() == ["emoticon_fix", "sentiment_analysis"]
+    
+    def test_pipeline_processing(self):
+        """Test basic pipeline processing."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_text_cleaning()
+                   .add_emoticon_fix())
+        
+        result = pipeline.process("Text   with   :)   emoticon")
+        assert "Smile" in result
+        assert "   " not in result  # Whitespace normalized
+    
+    def test_pipeline_with_metadata(self):
+        """Test pipeline processing with metadata."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_emoticon_fix()
+                   .add_sentiment_analysis())
+        
+        result, metadata = pipeline.process("Happy :)", collect_metadata=True)
+        
+        assert result == "Happy Smile"
+        assert "pipeline" in metadata
+        assert "steps" in metadata
+        assert len(metadata["steps"]) == 2
+        assert metadata["steps"][0]["step"] == "emoticon_fix"
+        assert metadata["steps"][1]["step"] == "sentiment_analysis"
+    
+    def test_pipeline_caching(self):
+        """Test pipeline caching functionality."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_emoticon_fix()
+                   .enable_cache())
+        
+        # First processing
+        result1 = pipeline.process("Happy :)")
+        
+        # Second processing (should use cache)
+        result2 = pipeline.process("Happy :)")
+        
+        assert result1 == result2 == "Happy Smile"
+        assert len(pipeline.results_cache) == 1
+        
+        # Clear cache
+        pipeline.clear_cache()
+        assert len(pipeline.results_cache) == 0
+    
+    def test_batch_processing(self):
+        """Test batch processing."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = TextPreprocessingPipeline("Test").add_emoticon_fix()
+        
+        texts = ["Happy :)", "Sad :(", "Excited :D"]
+        results = pipeline.process_batch(texts)
+        
+        assert len(results) == 3
+        assert "Smile" in results[0]
+        assert "Sad" in results[1]
+        assert "Laugh" in results[2]
+    
+    def test_step_management(self):
+        """Test step management functionality."""
+        from emoticon_fix import TextPreprocessingPipeline, EmoticonFixStep
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_emoticon_fix()
+                   .add_sentiment_analysis())
+        
+        # Test step retrieval
+        step = pipeline.get_step("emoticon_fix")
+        assert isinstance(step, EmoticonFixStep)
+        
+        # Test step removal
+        removed = pipeline.remove_step("sentiment_analysis")
+        assert removed
+        assert len(pipeline.steps) == 1
+        
+        # Test non-existent step removal
+        removed = pipeline.remove_step("non_existent")
+        assert not removed
+    
+    def test_pipeline_cloning(self):
+        """Test pipeline cloning."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        original = (TextPreprocessingPipeline("Original")
+                   .add_emoticon_fix()
+                   .enable_cache())
+        
+        clone = original.clone()
+        
+        assert clone.name == "Original_copy"
+        assert len(clone.steps) == len(original.steps)
+        assert clone.enable_caching == original.enable_caching
+        
+        # Modifications to clone shouldn't affect original
+        clone.add_sentiment_analysis()
+        assert len(clone.steps) == 2
+        assert len(original.steps) == 1
+    
+    def test_pipeline_serialization(self):
+        """Test pipeline serialization to dict."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_emoticon_fix()
+                   .add_sentiment_analysis()
+                   .enable_cache())
+        
+        data = pipeline.to_dict()
+        
+        assert data["name"] == "Test"
+        assert data["step_count"] == 2
+        assert data["caching_enabled"]
+        assert len(data["steps"]) == 2
+        assert data["steps"][0]["name"] == "emoticon_fix"
+    
+    def test_empty_pipeline(self):
+        """Test empty pipeline behavior."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = TextPreprocessingPipeline("Empty")
+        
+        result = pipeline.process("Test text")
+        assert result == "Test text"
+        
+        result, metadata = pipeline.process("Test", collect_metadata=True)
+        assert result == "Test"
+        assert metadata["steps"] == []
+
+
+class TestPrebuiltPipelines:
+    """Test prebuilt pipeline factories."""
+    
+    def test_standard_pipeline(self):
+        """Test standard pipeline creation."""
+        from emoticon_fix import create_standard_pipeline
+        
+        pipeline = create_standard_pipeline("MyStandard")
+        assert pipeline.name == "MyStandard"
+        
+        step_names = pipeline.get_step_names()
+        assert "text_cleaning" in step_names
+        assert "emoticon_fix" in step_names
+        assert "sentiment_analysis" in step_names
+        
+        # Test processing
+        result = pipeline.process("Text   with  :)  extra  spaces!!!")
+        assert "Smile" in result
+        assert "   " not in result
+        assert "!!!" not in result  # Extra punctuation removed
+    
+    def test_ner_pipeline(self):
+        """Test NER pipeline creation."""
+        from emoticon_fix import create_ner_pipeline
+        
+        pipeline = create_ner_pipeline()
+        assert pipeline.name == "NERPipeline"
+        
+        step_names = pipeline.get_step_names()
+        assert "text_cleaning" in step_names
+        assert "replace_emoticons" in step_names
+        assert "sentiment_analysis" in step_names
+        
+        # Test processing
+        result = pipeline.process("Happy  :)  day")
+        assert "__EMO_Smile__" in result
+        assert "   " not in result  # Whitespace normalized
+    
+    def test_analysis_pipeline(self):
+        """Test analysis pipeline creation."""
+        from emoticon_fix import create_analysis_pipeline
+        
+        pipeline = create_analysis_pipeline()
+        assert pipeline.name == "AnalysisPipeline"
+        assert pipeline.enable_metadata
+        
+        result, metadata = pipeline.process("Happy :)")
+        assert result == "Happy :)"  # Text unchanged
+        assert "sentiment_analysis" in [step["step"] for step in metadata["steps"]]
+
+
+class TestPipelineErrorHandling:
+    """Test pipeline error handling."""
+    
+    def test_invalid_step_type(self):
+        """Test adding invalid step type."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = TextPreprocessingPipeline("Test")
+        
+        with pytest.raises(TypeError):
+            pipeline.add_step("not_a_step_object")
+    
+    def test_invalid_input_types(self):
+        """Test invalid input types for pipeline."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = TextPreprocessingPipeline("Test").add_emoticon_fix()
+        
+        with pytest.raises(TypeError):
+            pipeline.process(123)
+        
+        with pytest.raises(TypeError):
+            pipeline.process_batch("not_a_list")
+    
+    def test_pipeline_step_errors(self):
+        """Test error handling in pipeline steps."""
+        from emoticon_fix import TextPreprocessingPipeline, CustomStep
+        
+        def error_func(text):
+            raise ValueError("Test error")
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_step(CustomStep("error_step", error_func)))
+        
+        with pytest.raises(ValueError):
+            pipeline.process("Test text")
+
+
+class TestPipelinePerformance:
+    """Test pipeline performance characteristics."""
+    
+    def test_large_text_processing(self):
+        """Test pipeline with large text."""
+        from emoticon_fix import create_standard_pipeline
+        
+        pipeline = create_standard_pipeline()
+        large_text = "Happy :) " * 1000  # 9000 characters
+        
+        result = pipeline.process(large_text)
+        assert "Smile" in result
+        assert result.count("Smile") == 1000
+    
+    def test_batch_processing_performance(self):
+        """Test batch processing performance."""
+        from emoticon_fix import create_standard_pipeline
+        
+        pipeline = create_standard_pipeline()
+        texts = [f"Text {i} with :) emoticon" for i in range(100)]
+        
+        results = pipeline.process_batch(texts)
+        assert len(results) == 100
+        
+        for result in results:
+            assert "Smile" in result
+    
+    def test_caching_performance(self):
+        """Test caching improves performance on repeated inputs."""
+        from emoticon_fix import TextPreprocessingPipeline
+        
+        pipeline = (TextPreprocessingPipeline("Test")
+                   .add_emoticon_fix()
+                   .add_sentiment_analysis()
+                   .enable_cache())
+        
+        text = "Happy :) and excited :D!"
+        
+        # Process multiple times (should use cache after first)
+        for _ in range(10):
+            result = pipeline.process(text)
+            assert "Smile" in result and "Laugh" in result
+        
+        # Should have cached result
+        assert len(pipeline.results_cache) == 1
+
+
 if __name__ == "__main__":
     pytest.main([__file__]) 

@@ -15,10 +15,22 @@ from .emoticon_fix import (
     create_emotion_profile,
     compare_emotion_profiles,
     export_analysis,
-    get_emoticon_trends
+    get_emoticon_trends,
+    # New pipeline functionality
+    PipelineStep,
+    EmoticonFixStep,
+    RemoveEmoticonStep,
+    ReplaceEmoticonStep,
+    SentimentAnalysisStep,
+    TextCleaningStep,
+    CustomStep,
+    TextPreprocessingPipeline,
+    create_standard_pipeline,
+    create_ner_pipeline,
+    create_analysis_pipeline
 )
 
-__version__ = "0.2.4"
+__version__ = "0.3.0"
 
 __all__ = [
     'emoticon_fix', 
@@ -37,5 +49,17 @@ __all__ = [
     'create_emotion_profile',
     'compare_emotion_profiles',
     'export_analysis',
-    'get_emoticon_trends'
+    'get_emoticon_trends',
+    # New pipeline functionality
+    'PipelineStep',
+    'EmoticonFixStep',
+    'RemoveEmoticonStep',
+    'ReplaceEmoticonStep',
+    'SentimentAnalysisStep',
+    'TextCleaningStep',
+    'CustomStep',
+    'TextPreprocessingPipeline',
+    'create_standard_pipeline',
+    'create_ner_pipeline',
+    'create_analysis_pipeline'
 ]
