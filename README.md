@@ -30,18 +30,18 @@ print(result)  # Output: 'Feeling In Love today!'
 
 ## Features
 
-- **🎯 Core Functionality**
+- **Core Functionality**
   - Transform emoticons to semantic meanings (`:)` → `Smile`)
   - Support for Western emoticons and Japanese kaomoji
   - Remove or replace emoticons with custom tags
 
-- **📊 Advanced Analytics**
+- **Advanced Analytics**
   - Sentiment analysis and scoring
   - Emotion profiling and comparison
   - Statistics and trend analysis
   - Data export (JSON/CSV)
 
-- **🔧 Text Processing Pipeline**
+- **Text Processing Pipeline**
   - Configurable, reusable workflows
   - Built-in preprocessing steps
   - Caching and batch processing
@@ -61,20 +61,20 @@ tagged_text = replace_emoticons('Hello :) World :D', tag_format="__EMO_{tag}__")
 print(tagged_text)  # Output: 'Hello __EMO_Smile__ World __EMO_Laugh__'
 ```
 
-## 📚 Documentation
+## Documentation
 
 For detailed documentation, advanced examples, and comprehensive guides, visit our [**Wiki**](https://github.com/xga0/emoticon_fix/wiki):
 
-- **[📖 User Guide](https://github.com/xga0/emoticon_fix/wiki/User-Guide)** - Complete usage documentation
-- **[📊 Analytics & Sentiment Analysis](https://github.com/xga0/emoticon_fix/wiki/Analytics-and-Sentiment-Analysis)** - Advanced analytics features
-- **[🔧 Text Processing Pipeline](https://github.com/xga0/emoticon_fix/wiki/Text-Processing-Pipeline)** - Pipeline configuration and usage
-- **[💡 Examples & Use Cases](https://github.com/xga0/emoticon_fix/wiki/Examples-and-Use-Cases)** - Real-world examples
-- **[🌍 About Emoticons & Kaomoji](https://github.com/xga0/emoticon_fix/wiki/About-Emoticons-and-Kaomoji)** - Background information
+- **[User Guide](https://github.com/xga0/emoticon_fix/wiki/User-Guide)** - Complete usage documentation
+- **[Analytics & Sentiment Analysis](https://github.com/xga0/emoticon_fix/wiki/Analytics-and-Sentiment-Analysis)** - Advanced analytics features
+- **[Text Processing Pipeline](https://github.com/xga0/emoticon_fix/wiki/Text-Processing-Pipeline)** - Pipeline configuration and usage
+- **[Examples & Use Cases](https://github.com/xga0/emoticon_fix/wiki/Examples-and-Use-Cases)** - Real-world examples
+- **[About Emoticons & Kaomoji](https://github.com/xga0/emoticon_fix/wiki/About-Emoticons-and-Kaomoji)** - Background information
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please see our [Contributing Guidelines](https://github.com/xga0/emoticon_fix/wiki/Contributing) for details.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
