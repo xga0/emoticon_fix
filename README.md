@@ -63,17 +63,18 @@ print(tagged_text)  # Output: 'Hello __EMO_Smile__ World __EMO_Laugh__'
 
 ## Documentation
 
-For detailed documentation, advanced examples, and comprehensive guides, visit our [**Wiki**](https://github.com/xga0/emoticon_fix/wiki):
+📖 **[Complete Documentation](README_FULL.md)** - For comprehensive guides, advanced features, and detailed examples, see our full documentation.
 
-- **[User Guide](https://github.com/xga0/emoticon_fix/wiki/User-Guide)** - Complete usage documentation
-- **[Analytics & Sentiment Analysis](https://github.com/xga0/emoticon_fix/wiki/Analytics-and-Sentiment-Analysis)** - Advanced analytics features
-- **[Text Processing Pipeline](https://github.com/xga0/emoticon_fix/wiki/Text-Processing-Pipeline)** - Pipeline configuration and usage
-- **[Examples & Use Cases](https://github.com/xga0/emoticon_fix/wiki/Examples-and-Use-Cases)** - Real-world examples
-- **[About Emoticons & Kaomoji](https://github.com/xga0/emoticon_fix/wiki/About-Emoticons-and-Kaomoji)** - Background information
+### Key Features Covered:
+- **Sentiment Analysis** - Advanced emotion detection and scoring
+- **Analytics & Statistics** - Comprehensive emoticon usage analysis  
+- **Text Processing Pipeline** - Configurable, reusable workflows
+- **Data Export** - JSON/CSV export capabilities
+- **Real-world Examples** - Social media analysis, customer feedback, and more
 
 ## Contributing
 
-Contributions are welcome! Please see our [Contributing Guidelines](https://github.com/xga0/emoticon_fix/wiki/Contributing) for details.
+Contributions are welcome! Please see the Contributing section in [README_FULL.md](README_FULL.md#contributing) for detailed guidelines.
 
 ## License
 
