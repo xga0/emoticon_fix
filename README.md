@@ -63,7 +63,7 @@ print(tagged_text)  # Output: 'Hello __EMO_Smile__ World __EMO_Laugh__'
 
 ## Documentation
 
-📖 **[Complete Documentation](README_FULL.md)** - For comprehensive guides, advanced features, and detailed examples, see our full documentation.
+**[Complete Documentation](README_FULL.md)** - For comprehensive guides, advanced features, and detailed examples, see our full documentation.
 
 ### Key Features Covered:
 - **Sentiment Analysis** - Advanced emotion detection and scoring
